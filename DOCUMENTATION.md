@@ -3,8 +3,7 @@
 ## Project Documentation for College Presentation and Viva
 
 **Live Deployments:**
-- Netlify: https://iaadarsh-blogging-platform.windsurf.build
-- Vercel: https://blogyfy-quwb4t91v-adarsh-tripathis-projects.vercel.app
+- Vercel:https://blogyfi-psi.vercel.app/login
 
 ## 1. Project Overview
 
