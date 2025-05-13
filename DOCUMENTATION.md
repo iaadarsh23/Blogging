@@ -4,7 +4,78 @@
 
 **Live Deployments:**
 - Netlify: https://iaadarsh-blogging-platform.windsurf.build
-- Vercel: https://blogyfy-quwb4t91v-adarsh-tripathis-projects.vercel.app
+- Vercel: https://blogyfy-u6um34m6r-adarsh-tripathis-projects.vercel.app
+
+## Project Structure Layout
+
+```
+blogging-platform/
+├── .github/                        # GitHub configuration files
+├── database/                       # MySQL database scripts
+│   └── schema.sql                  # Database schema definition
+├── src/
+│   ├── main/
+│   │   ├── java/                   # Java backend code
+│   │   │   └── com/blog/
+│   │   │       ├── controllers/    # API controllers
+│   │   │       │   ├── AuthController.java
+│   │   │       │   ├── BlogController.java
+│   │   │       │   └── UserController.java
+│   │   │       ├── filters/        # Servlet filters (CORS, Auth)
+│   │   │       │   ├── CORSFilter.java
+│   │   │       │   └── AuthFilter.java
+│   │   │       ├── models/         # Data models
+│   │   │       │   ├── Blog.java
+│   │   │       │   └── User.java
+│   │   │       ├── services/       # Business logic
+│   │   │       │   ├── BlogService.java
+│   │   │       │   └── UserService.java
+│   │   │       └── utils/          # Utility classes
+│   │   │           ├── DatabaseConnection.java
+│   │   │           └── JWTUtil.java
+│   │   └── webapp/                 # Web application resources
+│   │       ├── WEB-INF/           # Servlet configuration
+│   │       │   └── web.xml        # Web application configuration
+│   │       └── static/            # Frontend application
+│   │           ├── public/        # Static files
+│   │           │   ├── index.html # HTML entry point
+│   │           │   └── favicon.ico
+│   │           ├── src/           # React source code
+│   │           │   ├── assets/    # Static assets (images, etc.)
+│   │           │   ├── components/# Reusable React components
+│   │           │   │   ├── Navbar.jsx
+│   │           │   │   └── ProtectedRoute.jsx
+│   │           │   ├── context/   # React context (state management)
+│   │           │   │   └── AuthContext.jsx
+│   │           │   ├── pages/     # Page components
+│   │           │   │   ├── BlogDetail.jsx
+│   │           │   │   ├── CreateBlog.jsx
+│   │           │   │   ├── Dashboard.jsx
+│   │           │   │   ├── EditBlog.jsx
+│   │           │   │   ├── Login.jsx
+│   │           │   │   └── Register.jsx
+│   │           │   ├── services/  # API services
+│   │           │   │   ├── authService.js
+│   │           │   │   └── blogService.js
+│   │           │   ├── styles/    # CSS styling
+│   │           │   │   ├── main.css
+│   │           │   │   └── enhanced-theme.css
+│   │           │   ├── App.jsx    # Main app component
+│   │           │   ├── App.css    # App-specific styling
+│   │           │   ├── config.js  # Configuration constants
+│   │           │   ├── index.css  # Global styling
+│   │           │   └── main.jsx   # Application entry point
+│   │           ├── .gitignore     # Git ignore file
+│   │           ├── package.json   # NPM dependencies
+│   │           ├── vite.config.js # Vite configuration
+│   │           └── vercel.json    # Vercel deployment config
+│   └── test/                      # Test directory
+├── db-setup.bat                   # Database setup script
+├── run-app-updated.bat            # Application startup script
+├── README.md                      # Project documentation
+├── DOCUMENTATION.md              # Detailed technical documentation
+└── pom.xml                        # Maven configuration
+```
 
 ## 1. Project Overview
 
@@ -370,10 +441,278 @@ CREATE TABLE blogs (
 5. **Deployment**: Release to production environment
 6. **Monitoring**: Tracking usage and issues
 
-## 18. Conclusion
+## 18. Application Workflow
+
+### User Journey Flow
+
+```mermaid
+graph TD
+    A[User Visits Site] --> B{Has Account?}
+    B -->|No| C[Register]
+    B -->|Yes| D[Login]
+    C --> D
+    D --> E[Dashboard]
+    E --> F{User Actions}
+    F -->|Create| G[Create New Blog]
+    F -->|View| H[View Own Blogs]
+    F -->|Edit| I[Edit Existing Blog]
+    F -->|Delete| J[Delete Blog]
+    G --> E
+    I --> E
+    J --> E
+    H --> K[View Blog Details]
+    K --> L{Actions on Blog}
+    L -->|Edit| I
+    L -->|Delete| J
+    L -->|Back| E
+```
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    User->>Frontend: Enter credentials
+    Frontend->>Backend: POST /api/auth/login
+    Backend->>Database: Validate credentials
+    Database-->>Backend: User exists/doesn't exist
+    alt Valid credentials
+        Backend->>Backend: Generate JWT token
+        Backend-->>Frontend: Return token & user info
+        Frontend->>LocalStorage: Store token
+        Frontend-->>User: Redirect to dashboard
+    else Invalid credentials
+        Backend-->>Frontend: Authentication error
+        Frontend-->>User: Show error message
+    end
+```
+
+### Blog Creation Flow
+
+```mermaid
+sequenceDiagram
+    User->>Frontend: Fill blog form
+    Frontend->>Frontend: Validate input
+    alt Valid input
+        Frontend->>Backend: POST /api/blogs with JWT
+        Backend->>Backend: Validate JWT
+        alt Valid JWT
+            Backend->>Database: Save blog data
+            Database-->>Backend: Confirmation
+            Backend-->>Frontend: Success response
+            Frontend-->>User: Success message & redirect
+        else Invalid JWT
+            Backend-->>Frontend: Authorization error
+            Frontend-->>User: Session expired message
+        end
+    else Invalid input
+        Frontend-->>User: Validation error messages
+    end
+```
+
+## 19. UML Diagrams
+
+### Class Diagram
+
+```mermaid
+classDiagram
+    class User {
+        +int id
+        +String username
+        +String email
+        +String password
+        +Date createdAt
+        +Date updatedAt
+    }
+    
+    class Blog {
+        +int id
+        +String title
+        +String content
+        +int userId
+        +Date createdAt
+        +Date updatedAt
+    }
+    
+    class AuthController {
+        +registerUser()
+        +loginUser()
+        +validateToken()
+    }
+    
+    class BlogController {
+        +getAllBlogs()
+        +getBlogById()
+        +createBlog()
+        +updateBlog()
+        +deleteBlog()
+        +getUserBlogs()
+    }
+    
+    class UserController {
+        +getUserProfile()
+        +updateUserProfile()
+    }
+    
+    class UserService {
+        +createUser()
+        +findUserByEmail()
+        +validateCredentials()
+        +getUserById()
+    }
+    
+    class BlogService {
+        +createBlog()
+        +updateBlog()
+        +deleteBlog()
+        +findBlogById()
+        +findAllBlogsByUserId()
+    }
+    
+    class JWTUtil {
+        +generateToken()
+        +validateToken()
+        +extractUserId()
+    }
+    
+    class DatabaseConnection {
+        +getConnection()
+        +closeConnection()
+    }
+    
+    User "1" -- "*" Blog: creates
+    AuthController --> UserService: uses
+    BlogController --> BlogService: uses
+    UserController --> UserService: uses
+    UserService --> DatabaseConnection: uses
+    BlogService --> DatabaseConnection: uses
+    AuthController --> JWTUtil: uses
+    BlogController --> JWTUtil: uses
+    UserController --> JWTUtil: uses
+```
+
+### Component Diagram
+
+```mermaid
+flowchart TD
+    subgraph "Frontend Components"
+        A[App.jsx] --> B[AuthContext]
+        A --> C[Routes]
+        C --> D[Login]
+        C --> E[Register]
+        C --> F[Dashboard]
+        C --> G[CreateBlog]
+        C --> H[EditBlog]
+        C --> I[BlogDetail]
+        C --> J[ProtectedRoute]
+        J --> F
+        J --> G
+        J --> H
+        J --> I
+        B --> D
+        B --> E
+        B --> J
+        K[BlogService] --> F
+        K --> G
+        K --> H
+        K --> I
+        L[AuthService] --> D
+        L --> E
+    end
+    
+    subgraph "Backend Components"
+        M[AuthController] --> N[UserService]
+        O[BlogController] --> P[BlogService]
+        Q[UserController] --> N
+        N --> R[DatabaseConnection]
+        P --> R
+        S[JWTUtil] --> M
+        S --> O
+        S --> Q
+    end
+    
+    L -->|API Calls| M
+    K -->|API Calls| O
+```
+
+### Database Schema
+
+```mermaid
+erDiagram
+    USERS {
+        int id PK
+        string username
+        string email
+        string password
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    BLOGS {
+        int id PK
+        string title
+        string content
+        int user_id FK
+        timestamp created_at
+        timestamp updated_at
+    }
+    
+    USERS ||--o{ BLOGS : creates
+```
+
+## 20. API Endpoints
+
+| Endpoint | Method | Description | Auth Required | Request Body | Response |
+|----------|--------|-------------|--------------|--------------|----------|
+| `/api/auth/register` | POST | Register new user | No | `{username, email, password}` | `{id, username, email, token}` |
+| `/api/auth/login` | POST | User login | No | `{email, password}` | `{id, username, email, token}` |
+| `/api/blogs` | GET | Get all blogs | Yes | None | `[{id, title, content, userId, createdAt, updatedAt}]` |
+| `/api/blogs/:id` | GET | Get blog by ID | Yes | None | `{id, title, content, userId, createdAt, updatedAt}` |
+| `/api/blogs` | POST | Create blog | Yes | `{title, content}` | `{id, title, content, userId, createdAt, updatedAt}` |
+| `/api/blogs/:id` | PUT | Update blog | Yes | `{title, content}` | `{id, title, content, userId, createdAt, updatedAt}` |
+| `/api/blogs/:id` | DELETE | Delete blog | Yes | None | `{message: "Blog deleted"}` |
+| `/api/blogs/user` | GET | Get user blogs | Yes | None | `[{id, title, content, userId, createdAt, updatedAt}]` |
+| `/api/users/profile` | GET | Get user profile | Yes | None | `{id, username, email, createdAt, updatedAt}` |
+
+## 21. State Management
+
+### AuthContext Structure
+
+```javascript
+// Initial state
+const initialState = {
+  isAuthenticated: false,
+  user: null,
+  loading: true,
+  error: null
+};
+
+// Actions
+function authReducer(state, action) {
+  switch (action.type) {
+    case 'LOGIN_SUCCESS':
+      return {
+        ...state,
+        isAuthenticated: true,
+        user: action.payload,
+        loading: false
+      };
+    case 'LOGOUT':
+      return {
+        ...state,
+        isAuthenticated: false,
+        user: null
+      };
+    // Other cases...
+  }
+}
+```
+
+## 22. Conclusion
 
 Bloggyfy represents a modern, full-stack web application that demonstrates proficiency in both frontend and backend technologies. The project showcases the integration of React with Java servlets, creating a seamless user experience while maintaining a clean separation of concerns between client and server.
 
 The implementation of features like user authentication, blog management, and responsive design highlights the project's comprehensive approach to web development. The use of modern tools like Vite for building and Netlify/Vercel for deployment demonstrates an understanding of current best practices in the industry.
+
+The workflow diagrams and UML models provided in this documentation illustrate the application architecture, component interactions, and data flow throughout the system. These visual representations help in understanding the overall structure and behavior of the application.
 
 This documentation provides a detailed overview of the project's architecture, technology stack, and implementation details, serving as a valuable resource for the college presentation and viva examination.
